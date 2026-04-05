@@ -101,7 +101,7 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
                 disabled={saving}
                 placeholder="Description"
               />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-16">
                 <div className="sm:col-span-6">
                   <select
                     className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
@@ -221,16 +221,16 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
         </div>
 
         {!editing ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
-              className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600"
+              className="w-full sm:w-24 rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600"
               onClick={() => setEditing(true)}
               type="button"
             >
               Edit
             </button>
             <button
-              className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full sm:w-24 rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => onComplete(task._id)}
               disabled={task.completed}
               type="button"
@@ -238,7 +238,7 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
               Complete
             </button>
             <button
-              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500"
+              className="w-full sm:w-24 rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500"
               onClick={() => onDelete(task._id)}
               type="button"
             >

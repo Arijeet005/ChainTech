@@ -15,6 +15,7 @@ const taskSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, "Category is required"],
+      default: "others",
       trim: true,
       lowercase: true,
       maxlength: [50, "Category must be 50 characters or less"]
@@ -30,5 +31,15 @@ const taskSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+function ensureCategory(_doc, ret) {
+  if (!ret.category) {
+    ret.category = "others";
+  }
+  return ret;
+}
+
+taskSchema.set("toJSON", { transform: ensureCategory });
+taskSchema.set("toObject", { transform: ensureCategory });
 
 module.exports = mongoose.model("Task", taskSchema);
