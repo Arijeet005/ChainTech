@@ -12,6 +12,17 @@ const taskSchema = new mongoose.Schema(
       default: "",
       trim: true
     },
+    category: {
+      type: String,
+      required: [true, "Category is required"],
+      trim: true,
+      lowercase: true,
+      maxlength: [50, "Category must be 50 characters or less"]
+    },
+    dueDate: {
+      type: Date,
+      default: null
+    },
     completed: {
       type: Boolean,
       default: false
@@ -21,4 +32,3 @@ const taskSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Task", taskSchema);
-

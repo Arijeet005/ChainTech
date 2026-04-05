@@ -1,19 +1,23 @@
-:root {
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
-    "Apple Color Emoji", "Segoe UI Emoji";
-  color: #111827;
-  background: #f9fafb;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-* {
-  box-sizing: border-box;
-}
+@layer base {
+  :root {
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial,
+      "Apple Color Emoji", "Segoe UI Emoji";
+  }
 
-body {
-  margin: 0;
-}
+  * {
+    box-sizing: border-box;
+  }
 
-a {
-  color: inherit;
-}
+  body {
+    @apply bg-gray-900 text-gray-100;
+    margin: 0;
+  }
 
+  a {
+    color: inherit;
+  }
+}

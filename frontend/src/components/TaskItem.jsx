@@ -1,9 +1,34 @@
 import React, { useMemo, useState } from "react";
+import {
+  DEFAULT_CATEGORIES,
+  categoryTextColorClass,
+  formatCategoryLabel,
+  normalizeCategory
+} from "../constants/taskCategories.js";
 
 export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
+
+  const initialCategory = useMemo(() => {
+    const normalized = normalizeCategory(task.category);
+    const match = DEFAULT_CATEGORIES.find((c) => normalizeCategory(c) === normalized);
+    if (match) {
+      return { selected: match, custom: "" };
+    }
+    return { selected: "Custom", custom: task.category || "" };
+  }, [task.category]);
+
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory.selected);
+  const [customCategory, setCustomCategory] = useState(initialCategory.custom);
+  const [dueDate, setDueDate] = useState(() => {
+    try {
+      return task.dueDate ? new Date(task.dueDate).toISOString().slice(0, 10) : "";
+    } catch {
+      return "";
+    }
+  });
   const [saving, setSaving] = useState(false);
   const [localError, setLocalError] = useState("");
 
@@ -15,6 +40,15 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
     }
   }, [task.createdAt]);
 
+  const dueLabel = useMemo(() => {
+    if (!task.dueDate) return "";
+    try {
+      return new Date(task.dueDate).toLocaleDateString();
+    } catch {
+      return "";
+    }
+  }, [task.dueDate]);
+
   async function save() {
     setLocalError("");
     const trimmedTitle = title.trim();
@@ -23,9 +57,21 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
       return;
     }
 
+    const finalCategory =
+      selectedCategory === "Custom" ? customCategory.trim() : selectedCategory;
+    if (!finalCategory) {
+      setLocalError("Category must not be empty");
+      return;
+    }
+
     setSaving(true);
     try {
-      await onUpdate(task._id, { title: trimmedTitle, description });
+      await onUpdate(task._id, {
+        title: trimmedTitle,
+        description,
+        category: finalCategory,
+        dueDate: dueDate || null
+      });
       setEditing(false);
     } catch {
       // parent shows error
@@ -36,33 +82,64 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
 
   return (
     <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 12,
-        padding: 12
-      }}
+      className="rounded-xl border border-gray-700 bg-gray-800 p-4 transition-colors hover:border-gray-600"
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ flex: 1 }}>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row">
+        <div className="min-w-0 flex-1">
           {editing ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="flex flex-col gap-3">
               <input
-                className="input"
+                className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 disabled={saving}
               />
               <input
-                className="input"
+                className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={saving}
                 placeholder="Description"
               />
-              {localError ? <div className="error">{localError}</div> : null}
-              <div className="row">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                <div className="sm:col-span-6">
+                  <select
+                    className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    disabled={saving}
+                  >
+                    {DEFAULT_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                    <option value="Custom">Custom</option>
+                  </select>
+                </div>
+                <input
+                  className="sm:col-span-6 w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 focus:border-blue-500 focus:outline-none"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  disabled={saving}
+                />
+              </div>
+              {selectedCategory === "Custom" ? (
+                <input
+                  className="w-full rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-blue-500 focus:outline-none"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  disabled={saving}
+                  placeholder="Custom category"
+                />
+              ) : null}
+              {localError ? (
+                <div className="text-sm text-red-400">{localError}</div>
+              ) : null}
+              <div className="flex flex-wrap gap-2">
                 <button
-                  className="btn btnPrimary"
+                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={save}
                   disabled={saving}
                   type="button"
@@ -70,11 +147,22 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
                   {saving ? "Saving..." : "Save"}
                 </button>
                 <button
-                  className="btn"
+                  className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
                   onClick={() => {
                     setEditing(false);
                     setTitle(task.title);
                     setDescription(task.description || "");
+                    setSelectedCategory(initialCategory.selected);
+                    setCustomCategory(initialCategory.custom);
+                    try {
+                      setDueDate(
+                        task.dueDate
+                          ? new Date(task.dueDate).toISOString().slice(0, 10)
+                          : ""
+                      );
+                    } catch {
+                      setDueDate("");
+                    }
                     setLocalError("");
                   }}
                   disabled={saving}
@@ -86,40 +174,46 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
             </div>
           ) : (
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="flex flex-wrap items-center gap-2">
                 <div
-                  style={{
-                    fontWeight: 700,
-                    textDecoration: task.completed ? "line-through" : "none"
-                  }}
+                  className={`min-w-0 truncate text-base font-semibold ${
+                    task.completed ? "line-through text-gray-400" : "text-gray-100"
+                  }`}
                 >
                   {task.title}
                 </div>
                 {task.completed ? (
                   <span
-                    style={{
-                      fontSize: 12,
-                      padding: "2px 8px",
-                      borderRadius: 999,
-                      border: "1px solid #10b981",
-                      color: "#065f46",
-                      background: "#ecfdf5"
-                    }}
+                    className="rounded-full border border-emerald-600/40 bg-emerald-600/10 px-2 py-0.5 text-xs font-semibold text-emerald-300"
                   >
                     Completed
                   </span>
                 ) : (
-                  <span className="muted" style={{ fontSize: 12 }}>
+                  <span className="text-xs text-gray-400">
                     Pending
                   </span>
                 )}
               </div>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span
+                  className={`bg-gray-700 px-2 py-1 rounded-md text-sm ${categoryTextColorClass(
+                    task.category
+                  )}`}
+                >
+                  {formatCategoryLabel(task.category)}
+                </span>
+                {dueLabel ? (
+                  <span className="text-xs text-gray-400">
+                    Due: {dueLabel}
+                  </span>
+                ) : null}
+              </div>
               {task.description ? (
-                <div className="muted" style={{ marginTop: 6 }}>
+                <div className="mt-2 text-sm text-gray-300">
                   {task.description}
                 </div>
               ) : null}
-              <div className="muted" style={{ fontSize: 12, marginTop: 8 }}>
+              <div className="mt-3 text-xs text-gray-500">
                 Created: {created}
               </div>
             </div>
@@ -127,16 +221,16 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
         </div>
 
         {!editing ? (
-          <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+          <div className="flex flex-wrap gap-2">
             <button
-              className="btn"
+              className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600"
               onClick={() => setEditing(true)}
               type="button"
             >
               Edit
             </button>
             <button
-              className="btn"
+              className="rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600 disabled:cursor-not-allowed disabled:opacity-60"
               onClick={() => onComplete(task._id)}
               disabled={task.completed}
               type="button"
@@ -144,7 +238,7 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
               Complete
             </button>
             <button
-              className="btn btnDanger"
+              className="rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-500"
               onClick={() => onDelete(task._id)}
               type="button"
             >
@@ -156,4 +250,3 @@ export default function TaskItem({ task, onComplete, onDelete, onUpdate }) {
     </div>
   );
 }
-

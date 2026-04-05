@@ -5,8 +5,9 @@ export const api = axios.create({
   timeout: 10000
 });
 
-export async function fetchTasks() {
-  const { data } = await api.get("/api/tasks");
+export async function fetchTasks(category) {
+  const params = category ? { category } : undefined;
+  const { data } = await api.get("/api/tasks", { params });
   return data;
 }
 
@@ -29,4 +30,3 @@ export async function deleteTask(id) {
   const { data } = await api.delete(`/api/tasks/${id}`);
   return data;
 }
-

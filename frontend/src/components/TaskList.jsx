@@ -10,14 +10,20 @@ export default function TaskList({
   onRetry
 }) {
   if (loading) {
-    return <div className="muted">Loading tasks...</div>;
+    return <div className="text-sm text-gray-400">Loading tasks...</div>;
   }
 
   if (!tasks.length) {
     return (
       <div>
-        <div className="muted">No tasks yet. Add your first task above.</div>
-        <button className="btn" onClick={onRetry} style={{ marginTop: 12 }}>
+        <div className="text-sm text-gray-400">
+          No tasks yet. Add your first task above.
+        </div>
+        <button
+          className="mt-3 rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm font-semibold text-gray-100 hover:border-gray-600"
+          onClick={onRetry}
+          type="button"
+        >
           Refresh
         </button>
       </div>
@@ -25,7 +31,7 @@ export default function TaskList({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+    <div className="flex flex-col gap-3">
       {tasks.map((task) => (
         <TaskItem
           key={task._id}
@@ -38,4 +44,3 @@ export default function TaskList({
     </div>
   );
 }
-
